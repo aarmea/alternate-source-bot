@@ -1,3 +1,5 @@
+import sys
+
 from lxml import etree
 import requests
 import sqlalchemy
@@ -42,7 +44,18 @@ for xmlArticle in googleNewsArticles:
 
     relatedArticlesRequest = requests.get(
             GOOGLE_STORY_URL.format(cluster=article.story_id))
-    relatedArticlesXml = etree.XML(relatedArticlesRequest.content)
+
+    try:
+        relatedArticlesXml = etree.XML(relatedArticlesRequest.content)
+    except etree.XMLSyntaxError as error:
+        print("XML syntax error:", error)
+        print(relatedArticlesRequest.content)
+        print()
+        continue
+    except:
+        print("Unexpected error:", sys.exc_info()[0])
+        print()
+        continue
     relatedArticles = relatedArticlesXml.findall(".//item")
 
     for relatedXmlArticle in relatedArticles:
