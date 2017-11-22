@@ -1,14 +1,17 @@
 from lxml import etree
 import requests
+import sqlalchemy
 
 from storage import Session, Article, Story
 
-def makeArticle(xmlArticle, story):
+def getOrCreateArticle(xmlArticle, story):
     url = xmlArticle.find("link").text
-    title = xmlArticle.find("title").text
-
-    article = Article(url=url, title=title, story_id=story.id)
-    session.merge(article)
+    try:
+        article = session.query(Article).filter(Article.url==url).one()
+    except sqlalchemy.orm.exc.NoResultFound:
+        title = xmlArticle.find("title").text
+        article = Article(url=url, title=title, story_id=story.id)
+        session.add(article)
 
     return article
 
@@ -27,11 +30,14 @@ for xmlArticle in googleNewsArticles:
     clusterOffset = articleGuid.find(CLUSTER_PREFIX) + len(CLUSTER_PREFIX)
     cluster = articleGuid[clusterOffset:]
 
-    story = Story(id=cluster)
-    session.merge(story)
+    try:
+        story = session.query(Story).filter(Story.id==cluster).one()
+    except sqlalchemy.orm.exc.NoResultFound:
+        story = Story(id=cluster)
+        session.add(story)
     print(story)
 
-    article = makeArticle(xmlArticle, story)
+    article = getOrCreateArticle(xmlArticle, story)
     print(article)
 
     relatedArticlesRequest = requests.get(
@@ -40,7 +46,7 @@ for xmlArticle in googleNewsArticles:
     relatedArticles = relatedArticlesXml.findall(".//item")
 
     for relatedXmlArticle in relatedArticles:
-        relatedArticle = makeArticle(relatedXmlArticle, story)
+        relatedArticle = getOrCreateArticle(relatedXmlArticle, story)
         print(relatedArticle)
 
     print()
