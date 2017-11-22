@@ -1,4 +1,5 @@
 import sys
+import time
 
 from lxml import etree
 import requests
@@ -22,6 +23,7 @@ session = Session()
 GOOGLE_NEWS_URL = "https://news.google.com/news/rss/?ned=us&hl=en"
 GOOGLE_STORY_URL = "https://news.google.com/news/rss/story/{cluster}?ned=us&hl=en"
 CLUSTER_PREFIX = "cluster="
+REQUEST_WAIT_TIME = 2 # seconds
 
 googleNewsRequest = requests.get(GOOGLE_NEWS_URL)
 googleNewsXml = etree.XML(googleNewsRequest.content)
@@ -42,6 +44,7 @@ for xmlArticle in googleNewsArticles:
     article = getOrCreateArticle(xmlArticle, story)
     print(article)
 
+    time.sleep(REQUEST_WAIT_TIME)
     relatedArticlesRequest = requests.get(
             GOOGLE_STORY_URL.format(cluster=article.story_id))
 
