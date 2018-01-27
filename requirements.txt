@@ -1,0 +1,5 @@
+lxml>=4.1
+praw>=5.3
+psycopg2>=2.7
+requests>=2.18
+sqlalchemy>=1.2
