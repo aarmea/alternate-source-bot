@@ -3,7 +3,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 
-Engine = create_engine("sqlite:///articles.db")
+Engine = create_engine("postgresql://@/alternate-source-bot")
 Base = declarative_base()
 
 class Source(Base):
