@@ -1,18 +1,23 @@
+import textwrap
+from urllib.parse import urlparse
+
 import praw
 import sqlalchemy
-from urllib.parse import urlparse
 
 from storage import Session, Article, Submission
 
-# SUB_NAME = "alt_source_bot_test"
-SUB_NAME = "all"
+ACTIVE_SUB_NAME = "all"
+LOG_SUB_NAME = "alt_source_bot_log"
 MINIMUM_ARTICLES = 4
+TITLE_CUTOFF = 300
 
 def replyLoop():
     dbSession = Session()
     reddit = praw.Reddit()
+    activeSub = reddit.subreddit(ACTIVE_SUB_NAME)
+    logSub = reddit.subreddit(LOG_SUB_NAME)
 
-    for post in reddit.subreddit(SUB_NAME).stream.submissions():
+    for post in activeSub.stream.submissions():
         parsedUrl = urlparse(post.url)
         strippedUrl = parsedUrl._replace(query="", fragment="").geturl()
         print(post.id + ": " + post.url)
@@ -29,10 +34,6 @@ def replyLoop():
 
         if len(article.story.articles) < MINIMUM_ARTICLES:
             print("Not enough related articles to post, skipping")
-            continue
-
-        if post.subreddit.user_is_banned:
-            print("User is banned from subreddit, skipping")
             continue
 
         response = list()
@@ -61,14 +62,24 @@ def replyLoop():
         print(responseString)
 
         try:
-            comment = post.reply(responseString)
+            if post.subreddit.user_is_banned:
+                logTitle = textwrap.shorten(
+                        "[Banned] {subreddit}: {title}".format(
+                            subreddit=post.subreddit.url, title=post.title),
+                        width=TITLE_CUTOFF)
+                logText = "[Source]({url})\n\n{response}".format(
+                        url=post.shortlink, response=responseString)
+                logSub.submit(logTitle, selftext=logText)
+            else:
+                comment = post.reply(responseString)
+
+                # TODO: Keep track of the article and story that created this
+                submission = Submission(source_id=post.id,
+                        response_id=comment.id)
+                dbSession.add(submission)
+                dbSession.commit()
         except praw.exceptions.APIException as e:
             print(e)
-            continue
-
-        submission = Submission(source_id=post.id, response_id=comment.id)
-        dbSession.add(submission)
-        dbSession.commit()
 
 while True:
     try:
