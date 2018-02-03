@@ -8,7 +8,7 @@ from storage import Session, Article, Submission
 
 ACTIVE_SUB_NAME = "all"
 LOG_SUB_NAME = "alt_source_bot_log"
-MINIMUM_ARTICLES = 4
+MINIMUM_ARTICLES = 5
 TITLE_CUTOFF = 300
 
 def replyLoop():
