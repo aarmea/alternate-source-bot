@@ -67,8 +67,11 @@ def replyLoop():
                         "[Banned] {subreddit}: {title}".format(
                             subreddit=post.subreddit.url, title=post.title),
                         width=TITLE_CUTOFF)
-                logText = "[Source]({url})\n\n{response}".format(
-                        url=post.shortlink, response=responseString)
+                logText = """I was banned from {subreddit}. Here's what I would
+                    have said in response to [this submission]({url}):
+                    \n\n-----\n\n{response}""".format(
+                            subreddit=post.subreddit.url, url=post.shortlink,
+                            response=responseString)
                 logSub.submit(logTitle, selftext=logText)
             else:
                 comment = post.reply(responseString)
