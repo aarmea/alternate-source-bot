@@ -37,16 +37,24 @@ def replyLoop():
             continue
 
         response = list()
+
+        if post.title != article.title:
+            response.append("The original headline from {source} was: ".format(
+                source=article.source.nameOrHostname()))
+            response.append(article.title)
+            response.append("")
+
         response.append("Here are some other articles about this story:")
         response.append("")
+
         for relatedArticle in article.story.articles:
-            if relatedArticle.source.name:
-                sourceName = relatedArticle.source.name
-            else:
-                sourceName = relatedArticle.source.hostname
-            response.append("* {sourceName}: [{title}]({url})".format(
-                sourceName=sourceName, title=relatedArticle.title,
-                url=relatedArticle.url))
+            if article.url == relatedArticle.url:
+                continue
+
+            response.append("* {source}: [{title}]({url})".format(
+                source=relatedArticle.source.nameOrHostname(),
+                title=relatedArticle.title, url=relatedArticle.url))
+
         response.append("")
         response.append("-----")
         response.append("")

@@ -15,6 +15,12 @@ class Source(Base):
     articles = relationship("Article", back_populates="source")
     # TODO: Fields for issues with sources
 
+    def nameOrHostname(self):
+        if self.name:
+            return self.name
+        else:
+            return self.hostname
+
 class Article(Base):
     __tablename__ = "articles"
 
