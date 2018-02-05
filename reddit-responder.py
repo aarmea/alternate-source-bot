@@ -41,7 +41,7 @@ def replyLoop():
         if post.title != article.title:
             response.append("The original headline from {source} was: ".format(
                 source=article.source.nameOrHostname()))
-            response.append(article.title)
+            response.append("> " + article.title)
             response.append("")
 
         response.append("Here are some other articles about this story:")
