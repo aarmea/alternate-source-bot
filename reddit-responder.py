@@ -39,8 +39,9 @@ def replyLoop():
         response = list()
 
         if post.title != article.title:
-            response.append("The original headline from {source} was: ".format(
-                source=article.source.nameOrHostname()))
+            response.append("When I first saw this article from {source},"
+                    .format(source=article.source.nameOrHostname()))
+            response.append("its title was:")
             response.append("> " + article.title)
             response.append("")
 
