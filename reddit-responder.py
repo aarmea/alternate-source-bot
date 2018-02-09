@@ -20,22 +20,22 @@ def replyLoop():
     for post in activeSub.stream.submissions():
         parsedUrl = urlparse(post.url)
         strippedUrl = parsedUrl._replace(query="", fragment="").geturl()
-        print(post.id + ": " + post.url)
 
+        # Did we already comment on this post?
         if dbSession.query(Submission).filter_by(source_id=post.id).count() > 0:
-            print("Response exists, skipping")
             continue
 
+        # Do we know about this link?
         try:
             article = dbSession.query(Article).filter_by(url=strippedUrl).one()
         except sqlalchemy.orm.exc.NoResultFound:
-            print("Article not found in database, skipping")
             continue
 
+        # Do we know enough about this link?
         if len(article.story.articles) < MINIMUM_ARTICLES:
-            print("Not enough related articles to post, skipping")
             continue
 
+        print(post.id + ": " + post.url)
         response = list()
 
         if post.title != article.title:
