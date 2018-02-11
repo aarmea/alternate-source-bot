@@ -34,7 +34,7 @@ class Article(Base):
     source_hostname = sa.Column(sa.String, sa.ForeignKey("sources.hostname"))
     source = relationship("Source", uselist=False, back_populates="articles")
 
-    # TODO: The article text itself?
+    text = sa.Column(sa.String)
 
     def __repr__(self):
         return "<Article(url='{url}', story_id='{story_id}')>".format(
