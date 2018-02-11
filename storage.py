@@ -28,7 +28,8 @@ class Article(Base):
     title = sa.Column(sa.String)
 
     story_id = sa.Column(sa.String, sa.ForeignKey("stories.id"))
-    story = relationship("Story", uselist=False, back_populates="articles")
+    story = relationship("GoogleStory", uselist=False,
+            back_populates="articles")
 
     source_hostname = sa.Column(sa.String, sa.ForeignKey("sources.hostname"))
     source = relationship("Source", uselist=False, back_populates="articles")
@@ -39,14 +40,14 @@ class Article(Base):
         return "<Article(url='{url}', story_id='{story_id}')>".format(
                 url=self.url, story_id=self.story_id)
 
-class Story(Base):
+class GoogleStory(Base):
     __tablename__ = "stories"
 
     id = sa.Column(sa.String, primary_key=True)
     articles = relationship("Article", back_populates="story")
 
     def __repr__(self):
-        return "<Story(id='{id}')>".format(id=self.id)
+        return "<GoogleStory(id='{id}')>".format(id=self.id)
 
 class Submission(Base):
     __tablename__ = "submissions"

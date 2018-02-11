@@ -6,7 +6,7 @@ from lxml import etree
 import requests
 import sqlalchemy
 
-from storage import Session, Article, Story, Source
+from storage import Session, Article, GoogleStory, Source
 
 def getOrCreateArticle(xmlArticle, story):
     url = xmlArticle.find("link").text
@@ -47,9 +47,9 @@ for xmlArticle in googleNewsArticles:
     cluster = articleGuid[clusterOffset:]
 
     try:
-        story = session.query(Story).filter_by(id=cluster).one()
+        story = session.query(GoogleStory).filter_by(id=cluster).one()
     except sqlalchemy.orm.exc.NoResultFound:
-        story = Story(id=cluster)
+        story = GoogleStory(id=cluster)
         session.add(story)
     print(story)
 
