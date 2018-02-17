@@ -17,6 +17,8 @@ def requestWait():
 SCRAPE_PROCESSES = multiprocessing.cpu_count() * 2
 
 def scrapeArticlesFromSource(source):
+    # We just forked, so reseed to try to get a unique one
+    random.seed()
     session = Session()
     for article in session.query(Article).filter(
             Article.source_hostname == source.hostname,
