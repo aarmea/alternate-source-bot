@@ -18,22 +18,24 @@ def scrapeArticlesFromSource(source):
     for article in session.query(Article).filter(
             Article.source_hostname == source.hostname,
             Article.text.is_(None)).all():
+        try:
+            print(article.url)
+            readabilityProcess = subprocess.run(
+                    [READABILITY_PATH, "--json", article.url],
+                    stdout=subprocess.PIPE)
+            readabilityOutput = json.loads(readabilityProcess.stdout)
 
-        print(article.url)
-        readabilityProcess = subprocess.run(
-                [READABILITY_PATH, "--json", article.url],
-                stdout=subprocess.PIPE)
-        readabilityOutput = json.loads(readabilityProcess.stdout)
+            newTitle = readabilityOutput["title"]
+            if article.title != newTitle:
+                print("Changing title to: " + newTitle)
+                article.title = newTitle
 
-        newTitle = readabilityOutput["title"]
-        if article.title != newTitle:
-            print("Changing title to: " + newTitle)
-            article.title = newTitle
+            article.text = readabilityOutput["textContent"]
 
-        article.text = readabilityOutput["textContent"]
+            session.commit()
+            time.sleep(REQUEST_WAIT_TIME)
+        except Exception as e:
+            print(e)
 
-        session.commit()
-        time.sleep(REQUEST_WAIT_TIME)
-
-multiprocessing.Pool(SCRAPE_PROCESSES).map(scrapeArticlesFromSource,
-        Session().query(Source.hostname).all())
+with multiprocessing.Pool(SCRAPE_PROCESSES) as pool:
+    pool.map(scrapeArticlesFromSource, Session().query(Source.hostname).all())
