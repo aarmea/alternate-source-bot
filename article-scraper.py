@@ -1,4 +1,5 @@
 import json
+import multiprocessing
 import subprocess
 import time
 
@@ -6,13 +7,14 @@ from storage import Session, Article, Source
 
 # TODO: Later, do a crawl of known news sites (maybe in a separate script)
 
-session = Session()
-
 READABILITY_PATH = "/usr/bin/readability-scrape"
 REQUEST_WAIT_TIME = 5 # seconds
 
-for source in session.query(Source.hostname).all():
-    # TODO: Spawn a thread/process per news site
+# Scraping is mostly I/O-bound right now, so this is fine
+SCRAPE_PROCESSES = multiprocessing.cpu_count() * 2
+
+def scrapeArticlesFromSource(source):
+    session = Session()
     for article in session.query(Article).filter(
             Article.source_hostname == source.hostname,
             Article.text.is_(None)).all():
@@ -32,3 +34,6 @@ for source in session.query(Source.hostname).all():
 
         session.commit()
         time.sleep(REQUEST_WAIT_TIME)
+
+multiprocessing.Pool(SCRAPE_PROCESSES).map(scrapeArticlesFromSource,
+        Session().query(Source.hostname).all())
