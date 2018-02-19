@@ -11,7 +11,7 @@ from storage import Session, Article, Source
 READABILITY_PATH = "/usr/bin/readability-scrape"
 
 def requestWait():
-    time.sleep(random.uniform(2, 8))
+    time.sleep(random.uniform(1, 5))
 
 # Scraping is mostly I/O-bound right now, so this is fine
 SCRAPE_PROCESSES = multiprocessing.cpu_count() * 2
