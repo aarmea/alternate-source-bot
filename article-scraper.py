@@ -51,13 +51,13 @@ if __name__ == "__main__":
     # Spawn, don't fork, so that each child gets its own database connection
     multiprocessing.set_start_method("spawn")
     while True:
-        with multiprocessing.Pool(SCRAPE_PROCESSES) as pool:
+        with multiprocessing.Pool(SCRAPE_PROCESSES, maxtasksperchild=1) as pool:
             try:
                 session = Session()
                 # Pass just the hostname so it can be serialized for the child
                 pool.map(scrapeArticlesFromSource,
                         (s.hostname for s in session.query(Source.hostname)
-                            .all()))
+                            .all()), 1)
             except sqlalchemy.exc.ResourceClosedError as e:
                 printWithPid(e)
             except Exception as e:
