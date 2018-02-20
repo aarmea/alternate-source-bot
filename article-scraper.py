@@ -4,12 +4,13 @@ import os
 import subprocess
 import random
 import time
+from urllib.parse import urljoin
 
+from lxml import html
+import requests
 import sqlalchemy
 
 from storage import Session, Article, Source
-
-# TODO: Later, do a crawl of known news sites (maybe in a separate script)
 
 READABILITY_PATH = "/usr/bin/readability-scrape"
 READABILITY_TIMEOUT = 20 # seconds
@@ -24,13 +25,36 @@ PID = os.getpid()
 def printWithPid(item):
     print(str(PID) + ": " + str(item))
 
-
 def scrapeArticlesFromSource(hostname):
+    printWithPid("Scraping " + hostname)
     session = Session()
+
+    # Find new articles from the homepage of the source
+    # TODO: Recurse?
+    try:
+        # requests will follow redirects, including upgrades to https
+        sourceRequest = requests.get("http://" + hostname)
+        sourceTree = html.fromstring(sourceRequest.content)
+
+        for link in sourceTree.findall(".//a"):
+            if "href" not in link.attrib:
+                continue
+            url = urljoin(sourceRequest.url, link.attrib["href"])
+            printWithPid("Found " + url)
+            article = session.query(Article).filter_by(url=url).one_or_none()
+            if article is None and hostname in url:
+                session.add(Article(url=url, source_hostname=hostname))
+    except Exception as e:
+        printWithPid(e)
+
+    session.commit()
+    requestWait()
+
+    # Actually retrieve the articles
     for article in session.query(Article).filter(
             Article.source_hostname == hostname,
             Article.text.is_(None)).all():
-        printWithPid(article.url)
+        printWithPid("Retrieving " + article.url)
         try:
             readabilityString = subprocess.check_output(
                     [READABILITY_PATH, "--json", article.url],
@@ -51,6 +75,9 @@ if __name__ == "__main__":
     # Spawn, don't fork, so that each child gets its own database connection
     multiprocessing.set_start_method("spawn")
     while True:
+        printWithPid("-- Starting scraper --");
+        # Each process should be responsible for exactly one source to load
+        # balance scraping a little better
         with multiprocessing.Pool(SCRAPE_PROCESSES, maxtasksperchild=1) as pool:
             try:
                 session = Session()
