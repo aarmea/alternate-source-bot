@@ -13,7 +13,7 @@ import sqlalchemy
 from storage import Session, Article, Source
 
 READABILITY_PATH = "/usr/bin/readability-scrape"
-READABILITY_TIMEOUT = 20 # seconds
+REQUEST_TIMEOUT = 20 # seconds
 
 def requestWait():
     time.sleep(random.uniform(1, 5))
@@ -33,16 +33,17 @@ def scrapeArticlesFromSource(hostname):
     # TODO: Recurse?
     try:
         # requests will follow redirects, including upgrades to https
-        sourceRequest = requests.get("http://" + hostname)
+        sourceRequest = requests.get("http://" + hostname,
+                timeout=REQUEST_TIMEOUT)
         sourceTree = html.fromstring(sourceRequest.content)
 
         for link in sourceTree.findall(".//a"):
             if "href" not in link.attrib:
                 continue
             url = urljoin(sourceRequest.url, link.attrib["href"])
-            printWithPid("Found " + url)
             article = session.query(Article).filter_by(url=url).one_or_none()
             if article is None and hostname in url:
+                printWithPid("Found " + url)
                 session.add(Article(url=url, source_hostname=hostname))
     except Exception as e:
         printWithPid(e)
@@ -58,7 +59,7 @@ def scrapeArticlesFromSource(hostname):
         try:
             readabilityString = subprocess.check_output(
                     [READABILITY_PATH, "--json", article.url],
-                    timeout=READABILITY_TIMEOUT)
+                    timeout=REQUEST_TIMEOUT)
             readabilityOutput = json.loads(readabilityString)
 
             article.title = readabilityOutput["title"]
