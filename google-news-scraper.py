@@ -4,7 +4,6 @@ import time
 
 from lxml import etree
 import requests
-import sqlalchemy
 
 from storage import Session, Article, GoogleStory, Source
 
@@ -14,19 +13,20 @@ def getOrCreateArticle(xmlArticle, story):
     hostname = urlparse(url).hostname.lower()
     if hostname.find("www.") == 0:
         hostname = hostname[4:]
-    try:
-        source = session.query(Source).filter_by(hostname=hostname).one()
-    except sqlalchemy.orm.exc.NoResultFound:
+
+    source = session.query(Source).filter_by(hostname=hostname).one_or_none()
+    if source is None:
         source = Source(hostname=hostname, name="")
         session.add(source)
 
-    try:
-        article = session.query(Article).filter_by(url=url).one()
-    except sqlalchemy.orm.exc.NoResultFound:
+    article = session.query(Article).filter_by(url=url).one_or_none()
+    if article is None:
         title = xmlArticle.find("title").text
         article = Article(url=url, title=title, story_id=story.id,
                 source_hostname=source.hostname)
         session.add(article)
+    else:
+        article.story_id = story.id
 
     return article
 
@@ -46,9 +46,8 @@ for xmlArticle in googleNewsArticles:
     clusterOffset = articleGuid.find(CLUSTER_PREFIX) + len(CLUSTER_PREFIX)
     cluster = articleGuid[clusterOffset:]
 
-    try:
-        story = session.query(GoogleStory).filter_by(id=cluster).one()
-    except sqlalchemy.orm.exc.NoResultFound:
+    story = session.query(GoogleStory).filter_by(id=cluster).one_or_none()
+    if story is None:
         story = GoogleStory(id=cluster)
         session.add(story)
     print(story)
