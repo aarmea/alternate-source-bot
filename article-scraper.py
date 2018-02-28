@@ -54,7 +54,8 @@ def scrapeArticlesFromSource(hostname):
     # Actually retrieve the articles
     for article in session.query(Article).filter(
             Article.source_hostname == hostname,
-            Article.text.is_(None)).all():
+            Article.text.is_(None),
+            Article.retrieved.is_(None)).all():
         printWithPid("Retrieving " + article.url)
         try:
             readabilityString = subprocess.check_output(
@@ -62,15 +63,18 @@ def scrapeArticlesFromSource(hostname):
                     timeout=REQUEST_TIMEOUT)
             readabilityOutput = json.loads(readabilityString)
 
-            article.title = readabilityOutput["title"]
-            article.text = readabilityOutput["textContent"]
-
-            session.commit()
-            requestWait()
+            if readabilityOutput is not None:
+                article.title = readabilityOutput["title"]
+                article.text = readabilityOutput["textContent"]
         except subprocess.CalledProcessError as e:
             printWithPid(e)
         except Exception as e:
             printWithPid(e)
+
+        article.retrieved = sqlalchemy.sql.functions.current_timestamp()
+
+        session.commit()
+        requestWait()
 
 if __name__ == "__main__":
     # Spawn, don't fork, so that each child gets its own database connection

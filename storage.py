@@ -35,6 +35,7 @@ class Article(Base):
     source = relationship("Source", uselist=False, back_populates="articles")
 
     text = sa.Column(sa.String)
+    retrieved = sa.Column(sa.DateTime)
 
     def __repr__(self):
         return "<Article(url='{url}', story_id='{story_id}')>".format(
