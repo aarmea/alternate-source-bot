@@ -26,9 +26,9 @@ def replyLoop():
             continue
 
         # Do we know about this link?
-        try:
-            article = dbSession.query(Article).filter_by(url=strippedUrl).one()
-        except sqlalchemy.orm.exc.NoResultFound:
+        article = dbSession.query(
+                Article).filter_by(url=strippedUrl).one_or_none()
+        if article is None:
             continue
 
         # Do we know enough about this link?
@@ -68,8 +68,6 @@ def replyLoop():
                 to determine what is factually correct.""")
         responseString = "\n".join(response)
 
-        print(responseString)
-
         try:
             if post.subreddit.user_is_banned:
                 logTitle = textwrap.shorten(
@@ -93,8 +91,9 @@ def replyLoop():
         except praw.exceptions.APIException as e:
             print(e)
 
-while True:
-    try:
-        replyLoop()
-    except Exception as e:
-        print(e)
+if __name__ == "__main__":
+    while True:
+        try:
+            replyLoop()
+        except Exception as e:
+            print(e)
