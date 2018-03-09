@@ -11,8 +11,10 @@ LOG_SUB_NAME = "alt_source_bot_log"
 MINIMUM_ARTICLES = 5
 TITLE_CUTOFF = 300
 
-def replyLoop():
-    dbSession = Session()
+def _replyLoop():
+    print("-- Starting Reddit reply loop --")
+
+    session = Session()
     reddit = praw.Reddit()
     activeSub = reddit.subreddit(ACTIVE_SUB_NAME)
     logSub = reddit.subreddit(LOG_SUB_NAME)
@@ -22,11 +24,11 @@ def replyLoop():
         strippedUrl = parsedUrl._replace(query="", fragment="").geturl()
 
         # Did we already comment on this post?
-        if dbSession.query(Submission).filter_by(source_id=post.id).count() > 0:
+        if session.query(Submission).filter_by(source_id=post.id).count() > 0:
             continue
 
         # Do we know about this link?
-        article = dbSession.query(
+        article = session.query(
                 Article).filter_by(url=strippedUrl).one_or_none()
         if article is None:
             continue
@@ -35,7 +37,7 @@ def replyLoop():
         if len(article.story.articles) < MINIMUM_ARTICLES:
             continue
 
-        print(post.id + ": " + post.url)
+        print("Replying to https://reddit.com/" + post.id + " : " + post.url)
         response = list()
 
         if post.title != article.title:
@@ -86,14 +88,17 @@ def replyLoop():
                 # TODO: Keep track of the article and story that created this
                 submission = Submission(source_id=post.id,
                         response_id=comment.id)
-                dbSession.add(submission)
-                dbSession.commit()
+                session.add(submission)
+                session.commit()
         except praw.exceptions.APIException as e:
             print(e)
 
-if __name__ == "__main__":
+def replyProcess():
     while True:
         try:
-            replyLoop()
+            _replyLoop()
         except Exception as e:
             print(e)
+
+if __name__ == "__main__":
+    replyProcess()
