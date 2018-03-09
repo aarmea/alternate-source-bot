@@ -56,7 +56,7 @@ def _scrapeArticlesFromSource(hostname):
         try:
             readabilityString = subprocess.check_output(
                     [READABILITY_PATH, "--json", article.url],
-                    timeout=REQUEST_TIMEOUT)
+                    timeout=REQUEST_TIMEOUT).decode("utf8")
             readabilityOutput = json.loads(readabilityString)
 
             if readabilityOutput is not None:
