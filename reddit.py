@@ -98,6 +98,9 @@ def replyProcess():
     while True:
         try:
             _replyLoop()
+        except praw.exceptions.ClientException as e:
+            printWithPid(e)
+            return
         except Exception as e:
             printWithPid(e)
 
