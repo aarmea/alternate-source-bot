@@ -19,7 +19,7 @@ def _requestWait():
     time.sleep(random.uniform(1, 5))
 
 # Scraping is mostly I/O-bound right now, so this is fine
-SCRAPE_PROCESSES = multiprocessing.cpu_count() * 2
+SCRAPE_PROCESSES = max(4, multiprocessing.cpu_count() * 2)
 
 def _scrapeArticlesFromSource(hostname):
     printWithPid("Scraping " + hostname)
