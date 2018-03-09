@@ -5,6 +5,7 @@ import praw
 import sqlalchemy
 
 from storage import Session, Article, Submission
+from util import printWithPid
 
 ACTIVE_SUB_NAME = "all"
 LOG_SUB_NAME = "alt_source_bot_log"
@@ -12,7 +13,7 @@ MINIMUM_ARTICLES = 5
 TITLE_CUTOFF = 300
 
 def _replyLoop():
-    print("-- Starting Reddit reply loop --")
+    printWithPid("-- Starting Reddit reply loop --")
 
     session = Session()
     reddit = praw.Reddit()
@@ -37,7 +38,7 @@ def _replyLoop():
         if len(article.story.articles) < MINIMUM_ARTICLES:
             continue
 
-        print("Replying to https://reddit.com/" + post.id + " : " + post.url)
+        printWithPid("Replying to https://reddit.com/" + post.id + " : " + post.url)
         response = list()
 
         if post.title != article.title:
@@ -91,14 +92,14 @@ def _replyLoop():
                 session.add(submission)
                 session.commit()
         except praw.exceptions.APIException as e:
-            print(e)
+            printWithPid(e)
 
 def replyProcess():
     while True:
         try:
             _replyLoop()
         except Exception as e:
-            print(e)
+            printWithPid(e)
 
 if __name__ == "__main__":
     replyProcess()

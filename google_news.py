@@ -6,6 +6,7 @@ from lxml import etree
 import requests
 
 from storage import Session, Article, GoogleStory, Source
+from util import printWithPid
 
 GOOGLE_NEWS_URL = "https://news.google.com/news/rss/?ned=us&hl=en"
 GOOGLE_STORY_URL = "https://news.google.com/news/rss/story/{cluster}?ned=us&hl=en"
@@ -37,7 +38,7 @@ def _getOrCreateArticle(session, xmlArticle, story):
     return article
 
 def _scrape():
-    print("Scraping Google News at " + GOOGLE_NEWS_URL)
+    printWithPid("Scraping Google News at " + GOOGLE_NEWS_URL)
 
     session = Session()
     googleNewsRequest = requests.get(GOOGLE_NEWS_URL)
@@ -53,10 +54,10 @@ def _scrape():
         if story is None:
             story = GoogleStory(id=cluster)
             session.add(story)
-        print(story)
+        printWithPid(story)
 
         article = _getOrCreateArticle(session, xmlArticle, story)
-        print(article)
+        printWithPid(article)
 
         time.sleep(REQUEST_WAIT_TIME)
         relatedArticlesRequest = requests.get(
@@ -65,30 +66,30 @@ def _scrape():
         try:
             relatedArticlesXml = etree.XML(relatedArticlesRequest.content)
         except etree.XMLSyntaxError as error:
-            print("XML syntax error:", error)
-            print(relatedArticlesRequest.content)
+            printWithPid("XML syntax error:", error)
+            printWithPid(relatedArticlesRequest.content)
             continue
         except:
-            print("Unexpected error:", sys.exc_info()[0])
+            printWithPid("Unexpected error:", sys.exc_info()[0])
             continue
 
         relatedArticles = relatedArticlesXml.findall(".//item")
 
         for relatedXmlArticle in relatedArticles:
             relatedArticle = _getOrCreateArticle(session, relatedXmlArticle, story)
-            print(relatedArticle)
+            printWithPid(relatedArticle)
 
         session.commit()
 
     session.commit()
 
 def scrapeProcess():
-    print("-- Starting Google News scraper --")
+    printWithPid("-- Starting Google News scraper --")
     while True:
         try:
             _scrape()
         except Exception as e:
-            print(e)
+            printWithPid(e)
 
         time.sleep(SCRAPE_WAIT_TIME)
 

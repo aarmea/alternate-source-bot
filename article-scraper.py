@@ -1,6 +1,5 @@
 import json
 import multiprocessing
-import os
 import subprocess
 import random
 import time
@@ -11,6 +10,7 @@ import requests
 import sqlalchemy
 
 from storage import Session, Article, Source
+from util import printWithPid
 
 READABILITY_PATH = "/usr/bin/readability-scrape"
 REQUEST_TIMEOUT = 20 # seconds
@@ -20,10 +20,6 @@ def requestWait():
 
 # Scraping is mostly I/O-bound right now, so this is fine
 SCRAPE_PROCESSES = multiprocessing.cpu_count() * 2
-
-PID = os.getpid()
-def printWithPid(item):
-    print(str(PID) + ": " + str(item))
 
 def scrapeArticlesFromSource(hostname):
     printWithPid("Scraping " + hostname)
