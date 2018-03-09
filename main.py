@@ -2,6 +2,7 @@
 
 import multiprocessing
 
+import article_scraper
 import google_news
 import reddit
 
@@ -14,6 +15,7 @@ if __name__ == "__main__":
     multiprocessing.set_start_method("spawn")
 
     processes = list()
+    addAndStartProcess(processes, article_scraper.scrapeProcess)
     addAndStartProcess(processes, google_news.scrapeProcess)
     addAndStartProcess(processes, reddit.replyProcess)
 

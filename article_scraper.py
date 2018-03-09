@@ -15,13 +15,13 @@ from util import printWithPid
 READABILITY_PATH = "/usr/bin/readability-scrape"
 REQUEST_TIMEOUT = 20 # seconds
 
-def requestWait():
+def _requestWait():
     time.sleep(random.uniform(1, 5))
 
 # Scraping is mostly I/O-bound right now, so this is fine
 SCRAPE_PROCESSES = multiprocessing.cpu_count() * 2
 
-def scrapeArticlesFromSource(hostname):
+def _scrapeArticlesFromSource(hostname):
     printWithPid("Scraping " + hostname)
     session = Session()
 
@@ -45,7 +45,7 @@ def scrapeArticlesFromSource(hostname):
         printWithPid(e)
 
     session.commit()
-    requestWait()
+    _requestWait()
 
     # Actually retrieve the articles
     for article in session.query(Article).filter(
@@ -70,23 +70,26 @@ def scrapeArticlesFromSource(hostname):
         article.retrieved = sqlalchemy.sql.functions.current_timestamp()
 
         session.commit()
-        requestWait()
+        _requestWait()
 
-if __name__ == "__main__":
-    # Spawn, don't fork, so that each child gets its own database connection
-    multiprocessing.set_start_method("spawn")
+def scrapeProcess():
     while True:
-        printWithPid("-- Starting scraper --");
+        printWithPid("-- Starting article scraper --");
         # Each process should be responsible for exactly one source to load
         # balance scraping a little better
         with multiprocessing.Pool(SCRAPE_PROCESSES, maxtasksperchild=1) as pool:
             try:
                 session = Session()
                 # Pass just the hostname so it can be serialized for the child
-                pool.map(scrapeArticlesFromSource,
+                pool.map(_scrapeArticlesFromSource,
                         (s.hostname for s in session.query(Source.hostname)
                             .all()), 1)
             except sqlalchemy.exc.ResourceClosedError as e:
                 printWithPid(e)
             except Exception as e:
                 printWithPid(e)
+
+if __name__ == "__main__":
+    # Spawn, don't fork, so that each child gets its own database connection
+    multiprocessing.set_start_method("spawn")
+    scrapeProcess()
