@@ -35,7 +35,8 @@ def _replyLoop():
             continue
 
         # Do we know enough about this link?
-        if len(article.story.articles) < MINIMUM_ARTICLES:
+        if (article.story is None or
+                len(article.story.articles) < MINIMUM_ARTICLES):
             continue
 
         printWithPid("Replying to https://reddit.com/" + post.id + " : " + post.url)
