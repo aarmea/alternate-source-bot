@@ -12,6 +12,38 @@ LOG_SUB_NAME = "alt_source_bot_log"
 MINIMUM_ARTICLES = 5
 TITLE_CUTOFF = 300
 
+CHANGED_TITLE_TEMPLATE = \
+"""When I first saw this article from {source}, its title was:
+> {title}
+
+"""
+
+RESPONSE_TEMPLATE = \
+"""Here are some other articles about this story:
+
+{formattedArticles}
+
+-----
+
+I am a bot trying to encourage a balanced news diet.
+
+These are all of the articles I think are about this story. I do not select or
+sort articles based on any opinions or perceived biases, and neither I nor my
+creator advocate for or against any of these sources or articles. It is your
+responsibility to determine what is factually correct.
+"""
+
+ARTICLE_TEMPLATE = "* {source}: [{title}]({url})"
+
+BANNED_TEMPLATE = \
+"""I was banned from {subreddit}. Here's what I would have said in response to
+[this post]({url}):
+
+-----
+
+"""
+
+
 def _replyLoop():
     printWithPid("-- Starting Reddit reply loop --")
 
@@ -40,37 +72,24 @@ def _replyLoop():
             continue
 
         printWithPid("Replying to https://reddit.com/" + post.id + " : " + post.url)
-        response = list()
 
+        changedTitleString = ""
         if post.title != article.title:
-            response.append("When I first saw this article from {source},"
-                    .format(source=article.source.nameOrHostname()))
-            response.append("its title was:")
-            response.append("> " + article.title)
-            response.append("")
+            changedTitleString = CHANGED_TITLE_TEMPLATE.format(
+                    source=article.source.nameOrHostname(),
+                    title=article.title)
 
-        response.append("Here are some other articles about this story:")
-        response.append("")
-
+        formattedArticles = list()
         for relatedArticle in article.story.articles:
             if article.url == relatedArticle.url:
                 continue
 
-            response.append("* {source}: [{title}]({url})".format(
+            formattedArticles.append(ARTICLE_TEMPLATE.format(
                 source=relatedArticle.source.nameOrHostname(),
                 title=relatedArticle.title, url=relatedArticle.url))
 
-        response.append("")
-        response.append("-----")
-        response.append("")
-        response.append("I am a bot trying to encourage a balanced news diet.")
-        response.append("")
-        response.append("""These are all of the articles I think are about this
-                story. I do not select or sort articles based on any opinions or
-                perceived biases, and neither I nor my creator advocate for or
-                against any of these sources or articles. It is your responsibility
-                to determine what is factually correct.""")
-        responseString = "\n".join(response)
+        responseString = changedTitleString + RESPONSE_TEMPLATE.format(
+                formattedArticles="\n".join(formattedArticles))
 
         try:
             if post.subreddit.user_is_banned:
@@ -78,11 +97,8 @@ def _replyLoop():
                         "[Banned] {subreddit}: {title}".format(
                             subreddit=post.subreddit.url, title=post.title),
                         width=TITLE_CUTOFF)
-                logText = """I was banned from {subreddit}. Here's what I would
-                    have said in response to [this submission]({url}):
-                    \n\n-----\n\n{response}""".format(
-                            subreddit=post.subreddit.url, url=post.shortlink,
-                            response=responseString)
+                logText = BANNED_TEMPLATE.format(subreddit=post.subreddit.url,
+                        url=post.shortlink) + responseString
                 logSub.submit(logTitle, selftext=logText)
             else:
                 comment = post.reply(responseString)
