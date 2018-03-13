@@ -21,12 +21,12 @@ def _getOrCreateArticle(session, xmlArticle, story):
     if hostname.find("www.") == 0:
         hostname = hostname[4:]
 
-    source = session.query(Source).filter_by(hostname=hostname).one_or_none()
+    source = session.query(Source).get(hostname)
     if source is None:
         source = Source(hostname=hostname, name="")
         session.add(source)
 
-    article = session.query(Article).filter_by(url=url).one_or_none()
+    article = session.query(Article).get(url)
     if article is None:
         title = xmlArticle.find("title").text
         article = Article(url=url, title=title, story_id=story.id,
@@ -50,7 +50,7 @@ def _scrape():
         clusterOffset = articleGuid.find(CLUSTER_PREFIX) + len(CLUSTER_PREFIX)
         cluster = articleGuid[clusterOffset:]
 
-        story = session.query(GoogleStory).filter_by(id=cluster).one_or_none()
+        story = session.query(GoogleStory).get(cluster)
         if story is None:
             story = GoogleStory(id=cluster)
             session.add(story)

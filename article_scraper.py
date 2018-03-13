@@ -37,7 +37,7 @@ def _scrapeArticlesFromSource(hostname):
             if "href" not in link.attrib:
                 continue
             url = urljoin(sourceRequest.url, link.attrib["href"])
-            article = session.query(Article).filter_by(url=url).one_or_none()
+            article = session.query(Article).get(url)
             if article is None and hostname in url:
                 printWithPid("Found " + url)
                 session.add(Article(url=url, source_hostname=hostname))
@@ -51,7 +51,7 @@ def _scrapeArticlesFromSource(hostname):
     for article in session.query(Article).filter(
             Article.source_hostname == hostname,
             Article.text.is_(None),
-            Article.retrieved.is_(None)).all():
+            Article.retrieved.is_(None)):
         printWithPid("Retrieving " + article.url)
         try:
             readabilityString = subprocess.check_output(
@@ -82,8 +82,7 @@ def scrapeProcess():
                 session = Session()
                 # Pass just the hostname so it can be serialized for the child
                 pool.map(_scrapeArticlesFromSource,
-                        (s.hostname for s in session.query(Source.hostname)
-                            .all()), 1)
+                        (s.hostname for s in session.query(Source.hostname)), 1)
             except sqlalchemy.exc.ResourceClosedError as e:
                 printWithPid(e)
             except Exception as e:

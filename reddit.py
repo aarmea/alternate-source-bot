@@ -61,8 +61,7 @@ def _replyLoop():
             continue
 
         # Do we know about this link?
-        article = session.query(
-                Article).filter_by(url=strippedUrl).one_or_none()
+        article = session.query(Article).get(strippedUrl)
         if article is None:
             continue
 
