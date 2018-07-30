@@ -3,3 +3,4 @@ __pycache__/*
 
 articles.db
 praw.ini
+storage.ini

@@ -1,9 +1,14 @@
+from configparser import ConfigParser
+
 import sqlalchemy as sa
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 
-Engine = create_engine("postgresql://@/alternate-source-bot")
+_config = ConfigParser()
+_config.read("storage.ini")
+
+Engine = create_engine(_config["DEFAULT"]["connection_string"])
 Base = declarative_base()
 
 class Source(Base):
