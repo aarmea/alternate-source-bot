@@ -1,14 +1,11 @@
-from configparser import ConfigParser
-
 import sqlalchemy as sa
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 
-_config = ConfigParser()
-_config.read("storage.ini")
+from settings import Settings
 
-Engine = create_engine(_config["DEFAULT"]["connection_string"])
+Engine = create_engine(Settings["STORAGE"]["connection_string"])
 Base = declarative_base()
 
 class Source(Base):

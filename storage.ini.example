@@ -1,2 +1,0 @@
-[DEFAULT]
-connection_string=postgresql://user:pass@server/alternate-source-bot
