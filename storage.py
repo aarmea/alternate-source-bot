@@ -3,7 +3,9 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 
-Engine = create_engine("postgresql://@/alternate-source-bot")
+from settings import Settings
+
+Engine = create_engine(Settings["STORAGE"]["connection_string"])
 Base = declarative_base()
 
 class Source(Base):

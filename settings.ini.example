@@ -1,0 +1,7 @@
+[ACTIVE_ROLES]
+article_scraper=true
+google_news=true
+reddit=true
+
+[STORAGE]
+connection_string=postgresql://USER:PASSWORD@SERVER/alternate-source-bot
