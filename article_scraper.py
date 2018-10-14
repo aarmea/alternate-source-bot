@@ -13,7 +13,8 @@ from storage import Session, Article, Source
 from util import printWithPid
 
 READABILITY_PATH = "/usr/bin/readability-scrape"
-REQUEST_TIMEOUT = 20 # seconds
+REQUEST_TIMEOUT = 30 # seconds
+RENDER_TIMEOUT = 120 # seconds
 
 def _requestWait():
     time.sleep(random.uniform(1, 5))
@@ -56,7 +57,7 @@ def _scrapeArticlesFromSource(hostname):
         try:
             readabilityString = subprocess.check_output(
                     [READABILITY_PATH, "--json", article.url],
-                    timeout=REQUEST_TIMEOUT).decode("utf8")
+                    timeout=RENDER_TIMEOUT).decode("utf8")
             readabilityOutput = json.loads(readabilityString)
 
             if readabilityOutput is not None:
